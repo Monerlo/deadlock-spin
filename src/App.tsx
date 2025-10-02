@@ -2,9 +2,32 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchHeroes, type Hero } from './services/deadlockApi';
 import { SpinningReel } from './components/SpinningReel';
 import { HeroCard } from './components/HeroCard';
+import { PartyRandomizer } from './components/PartyRandomizer';
 
 const REEL_LENGTH = 100;
-const WINNER_POSITION = REEL_LENGTH - 10;
+
+const ModeSwitcher = ({ mode, setMode }: { mode: 'spin' | 'party', setMode: (mode: 'spin' | 'party') => void }) => {
+  const baseClasses = "w-full py-3 font-bold text-lg transition-colors";
+  const activeClasses = "bg-[#C09B54] text-black";
+  const inactiveClasses = "bg-[#1A1A1A] text-[#A0A0A0] hover:bg-[#2D2D2D]";
+
+  return (
+    <div className="flex w-full max-w-sm mx-auto border-2 border-[#2D2D2D] mb-6">
+      <button 
+        onClick={() => setMode('spin')}
+        className={`${baseClasses} ${mode === 'spin' ? activeClasses : inactiveClasses}`}
+      >
+        Single Spin
+      </button>
+      <button 
+        onClick={() => setMode('party')}
+        className={`${baseClasses} ${mode === 'party' ? activeClasses : inactiveClasses}`}
+      >
+        Party Mode
+      </button>
+    </div>
+  );
+};
 
 function App() {
   const [allHeroes, setAllHeroes] = useState<Hero[]>([]);
@@ -13,6 +36,7 @@ function App() {
   const [winner, setWinner] = useState<Hero | null>(null);
   const [canSpin, setCanSpin] = useState(true);
   const [reelItems, setReelItems] = useState<Hero[]>([]);
+  const [mode, setMode] = useState<'spin' | 'party'>('spin');
 
   const poolArray = useMemo(() => Array.from(roulettePool), [roulettePool]);
 
@@ -34,6 +58,14 @@ function App() {
     getHeroes();
   }, []);
 
+  // FIX: This useEffect resets the spin state if the user switches modes mid-animation.
+  useEffect(() => {
+    if (mode !== 'spin' && !canSpin) {
+      setCanSpin(true);
+      setWinner(null);
+    }
+  }, [mode, canSpin]);
+
   const handleHeroSelect = useCallback((hero: Hero) => {
     if (!canSpin) return;
     setRoulettePool((prevPool) => {
@@ -52,19 +84,20 @@ function App() {
     
     setCanSpin(false);
     setWinner(null);
-    setReelItems([...poolArray, ...poolArray].slice(0, REEL_LENGTH));
 
+    const WINNER_POSITION = 90;
+    const newWinner = poolArray[Math.floor(Math.random() * poolArray.length)];
+    
+    const newReel = [...Array(REEL_LENGTH)].map((_, i) => {
+      if (i === WINNER_POSITION) return newWinner;
+      return poolArray[Math.floor(Math.random() * poolArray.length)];
+    });
+    
+    // Use a timeout to ensure the state updates before the animation starts
     setTimeout(() => {
-      const newWinner = poolArray[Math.floor(Math.random() * poolArray.length)];
-      setWinner(newWinner);
-      
-      const newReel = [...Array(REEL_LENGTH)].map((_, i) => {
-        if (i === WINNER_POSITION) return newWinner;
-        return poolArray[Math.floor(Math.random() * poolArray.length)];
-      });
-      setReelItems(newReel);
-
-    }, 100);
+        setReelItems(newReel);
+        setWinner(newWinner);
+    }, 50);
   };
 
   const handleSpinEnd = () => {
@@ -75,7 +108,6 @@ function App() {
     if (!canSpin) return;
     setRoulettePool(new Set(allHeroes));
     setWinner(null);
-    setReelItems([...allHeroes, ...allHeroes].slice(0, REEL_LENGTH));
   };
 
   return (
@@ -86,7 +118,10 @@ function App() {
           <p className="text-[#A0A0A0]">A hero randomizer. Select heroes to include in the pool.</p>
         </header>
 
-        <section className="bg-[#121212] border border-[#2D2D2D] p-4 md:p-6 mb-6">
+        <ModeSwitcher mode={mode} setMode={setMode} />
+
+        {/* --- Spin Mode Section --- */}
+        <section className={`bg-[#121212] border border-[#2D2D2D] p-4 md:p-6 mb-6 ${mode === 'spin' ? '' : 'hidden'}`}>
           <SpinningReel reelItems={reelItems} winner={winner} onSpinEnd={handleSpinEnd} />
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
             <button
@@ -95,13 +130,6 @@ function App() {
               className="w-full md:w-auto bg-[#C09B54] hover:opacity-90 disabled:bg-[#2D2D2D] disabled:cursor-not-allowed text-black font-bold py-3 px-8 transition-all text-lg"
             >
               {!canSpin ? 'Spinning...' : 'Spin!'}
-            </button>
-             <button
-              onClick={handleResetPool}
-              disabled={!canSpin}
-              className="w-full md:w-auto bg-[#121212] border border-[#2D2D2D] hover:bg-[#2D2D2D] disabled:opacity-50 text-[#EAEAEA] font-bold py-3 px-8 transition-colors"
-            >
-              Reset Pool
             </button>
           </div>
           <div className="text-center h-8 mt-4">
@@ -115,11 +143,25 @@ function App() {
             )}
           </div>
         </section>
+        
+        {/* --- Party Mode Section --- */}
+        <div className={mode === 'party' ? '' : 'hidden'}>
+          <PartyRandomizer pool={poolArray} />
+        </div>
 
         <main className="bg-[#121212] border border-[#2D2D2D] p-4 md:p-6">
-           <h2 className="text-xl font-bold mb-4 text-[#EAEAEA]">
-             Select Heroes for the Pool ({roulettePool.size}/{allHeroes.length})
-           </h2>
+           <div className="flex justify-between items-center mb-4">
+             <h2 className="text-xl font-bold text-[#EAEAEA]">
+               Select Heroes for the Pool ({roulettePool.size}/{allHeroes.length})
+             </h2>
+             <button
+                onClick={handleResetPool}
+                disabled={!canSpin}
+                className="bg-[#121212] border border-[#2D2D2D] hover:bg-[#2D2D2D] disabled:opacity-50 text-[#A0A0A0] font-bold py-2 px-5 transition-colors text-sm"
+              >
+                Reset Pool
+              </button>
+           </div>
           {loading ? (
             <p className="text-center text-[#A0A0A0]">Loading heroes...</p>
           ) : (
