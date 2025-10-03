@@ -109,6 +109,13 @@ function App() {
     setRoulettePool(new Set(allHeroes));
     setWinner(null);
   };
+  
+  const handleClearPool = () => {
+    if (!canSpin) return;
+    setRoulettePool(new Set());
+    setWinner(null);
+  };
+
 
   return (
     <div className="bg-[#1A1A1A] text-[#EAEAEA] min-h-screen font-sans p-4 sm:p-6 lg:p-8 flex flex-col">
@@ -150,17 +157,26 @@ function App() {
         </div>
 
         <main className="bg-[#121212] border border-[#2D2D2D] p-4 md:p-6">
-           <div className="flex justify-between items-center mb-4">
+           <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
              <h2 className="text-xl font-bold text-[#EAEAEA]">
                Select Heroes for the Pool ({roulettePool.size}/{allHeroes.length})
              </h2>
-             <button
-                onClick={handleResetPool}
-                disabled={!canSpin}
-                className="bg-[#121212] border border-[#2D2D2D] hover:bg-[#2D2D2D] disabled:opacity-50 text-[#A0A0A0] font-bold py-2 px-5 transition-colors text-sm"
-              >
-                Reset Pool
-              </button>
+             <div className="flex gap-2">
+                <button
+                    onClick={handleClearPool}
+                    disabled={!canSpin}
+                    className="bg-[#121212] border border-[#2D2D2D] hover:bg-[#2D2D2D] disabled:opacity-50 text-[#A0A0A0] font-bold py-2 px-5 transition-colors text-sm"
+                >
+                    Deselect All
+                </button>
+                <button
+                    onClick={handleResetPool}
+                    disabled={!canSpin}
+                    className="bg-[#121212] border border-[#2D2D2D] hover:bg-[#2D2D2D] disabled:opacity-50 text-[#A0A0A0] font-bold py-2 px-5 transition-colors text-sm"
+                >
+                    Reset Pool
+                </button>
+             </div>
            </div>
           {loading ? (
             <p className="text-center text-[#A0A0A0]">Loading heroes...</p>
@@ -191,4 +207,3 @@ function App() {
 }
 
 export default App;
-
