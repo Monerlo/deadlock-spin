@@ -1,14 +1,9 @@
+import type { Hero } from '../types';
+
 const API_BASE_URL = "https://assets.deadlock-api.com";
-export interface Hero {
-  id: number;
-  name: string;
-  images: {
-    icon_hero_card: string;
-    icon_image_small: string;
-  };
-  player_selectable: boolean; 
-  disabled: boolean;          
-}
+
+// Ми видалили локальний 'interface Hero' звідси,
+// оскільки тепер він імпортується з центрального файлу типів.
 
 export async function fetchHeroes(): Promise<Hero[]> {
   try {
@@ -20,6 +15,7 @@ export async function fetchHeroes(): Promise<Hero[]> {
     return data;
   } catch (error) {
     console.error("Failed to fetch heroes:", error);
-    return []; 
+    return [];
   }
 }
+

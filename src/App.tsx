@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { fetchHeroes, type Hero } from './services/deadlockApi';
+// Services
+import { fetchHeroes } from './services/deadlockApi';
+import type { Hero } from './types';
+// Components
 import { SpinningReel } from './components/SpinningReel';
 import { HeroCard } from './components/HeroCard';
-import { PartyRandomizer } from './components/PartyRandomizer';
+import { PartyRandomizer } from './features/PartyRandomizer/PartyRandomizer';
 
 const REEL_LENGTH = 100;
 
@@ -50,7 +53,7 @@ function App() {
       setAllHeroes(activeHeroes);
       setRoulettePool(new Set(activeHeroes));
       
-      const initialReel = [...activeHeroes, ...activeHeroes, ...activeHeroes, ...activeHeroes].slice(0, REEL_LENGTH);
+      const initialReel = [...Array(REEL_LENGTH)].map(() => activeHeroes[Math.floor(Math.random() * activeHeroes.length)]);
       setReelItems(initialReel);
 
       setLoading(false);
@@ -58,7 +61,6 @@ function App() {
     getHeroes();
   }, []);
 
-  // FIX: This useEffect resets the spin state if the user switches modes mid-animation.
   useEffect(() => {
     if (mode !== 'spin' && !canSpin) {
       setCanSpin(true);
@@ -66,6 +68,8 @@ function App() {
     }
   }, [mode, canSpin]);
 
+  // ОПТИМІЗАЦІЯ: useCallback мемоізує функцію, щоб вона не створювалася заново
+  // при кожному рендері App. Це покращує продуктивність HeroCard.
   const handleHeroSelect = useCallback((hero: Hero) => {
     if (!canSpin) return;
     setRoulettePool((prevPool) => {
@@ -77,7 +81,7 @@ function App() {
       }
       return newPool;
     });
-  }, [canSpin]);
+  }, [canSpin]); // Залежність - canSpin
 
   const handleSpin = () => {
     if (poolArray.length < 2 || !canSpin) return;
@@ -93,7 +97,6 @@ function App() {
       return poolArray[Math.floor(Math.random() * poolArray.length)];
     });
     
-    // Use a timeout to ensure the state updates before the animation starts
     setTimeout(() => {
         setReelItems(newReel);
         setWinner(newWinner);
@@ -104,17 +107,17 @@ function App() {
     setCanSpin(true);
   };
 
-  const handleResetPool = () => {
+  const handleResetPool = useCallback(() => {
     if (!canSpin) return;
     setRoulettePool(new Set(allHeroes));
     setWinner(null);
-  };
+  }, [canSpin, allHeroes]);
   
-  const handleClearPool = () => {
+  const handleClearPool = useCallback(() => {
     if (!canSpin) return;
     setRoulettePool(new Set());
     setWinner(null);
-  };
+  }, [canSpin]);
 
 
   return (
@@ -127,7 +130,6 @@ function App() {
 
         <ModeSwitcher mode={mode} setMode={setMode} />
 
-        {/* --- Spin Mode Section --- */}
         <section className={`bg-[#121212] border border-[#2D2D2D] p-4 md:p-6 mb-6 ${mode === 'spin' ? '' : 'hidden'}`}>
           <SpinningReel reelItems={reelItems} winner={winner} onSpinEnd={handleSpinEnd} />
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
@@ -151,7 +153,6 @@ function App() {
           </div>
         </section>
         
-        {/* --- Party Mode Section --- */}
         <div className={mode === 'party' ? '' : 'hidden'}>
           <PartyRandomizer pool={poolArray} />
         </div>
@@ -207,3 +208,4 @@ function App() {
 }
 
 export default App;
+

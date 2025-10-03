@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import type { Hero } from '../services/deadlockApi';
+import type { Hero } from '../types'; 
 
 interface SpinningReelProps {
   reelItems: Hero[];
