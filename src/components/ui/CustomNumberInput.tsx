@@ -10,24 +10,24 @@ interface CustomNumberInputProps {
 }
 
 export function CustomNumberInput({ label, value, onChange, min, max, disabled = false }: CustomNumberInputProps) {
-    // Локальний стан для поля вводу, щоб дозволити тимчасові нечислові/порожні значення
+
     const [inputValue, setInputValue] = useState(value.toString());
 
-    // Ефект для синхронізації поля вводу, коли змінюється батьківський prop `value`
+
     useEffect(() => {
         setInputValue(value.toString());
     }, [value]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
-        setInputValue(val); // Оновлюємо локальний стан для відображення
+        setInputValue(val);
 
-        // Якщо користувач очищає поле, ще не оновлюємо батьківський компонент
+
         if (val === '') {
             return;
         }
 
-        // Якщо користувач вводить дійсне число в межах діапазону, оновлюємо батьківський стан
+
         const num = parseInt(val, 10);
         if (!isNaN(num) && num >= min && num <= max) {
             onChange(num);
@@ -38,15 +38,15 @@ export function CustomNumberInput({ label, value, onChange, min, max, disabled =
         const val = inputValue.trim();
         let num = parseInt(val, 10);
 
-        // Якщо поле порожнє або не є числом, скидаємо до мінімального значення
+
         if (val === '' || isNaN(num)) {
             onChange(min);
         } else {
-            // В іншому випадку, обмежуємо значення в межах min/max і оновлюємо батьківський компонент
+
             const clampedNum = Math.max(min, Math.min(max, num));
             onChange(clampedNum);
         }
-        // Потім useEffect синхронізує `inputValue` з фінальним станом батьківського компонента
+
     };
     
     const increment = () => {
