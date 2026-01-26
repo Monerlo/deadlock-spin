@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Hero, Priority } from '../types';
 
-
 interface PrioritizedHero {
     hero: Hero;
     priority: Priority | null;
@@ -11,7 +10,6 @@ interface PlayerResult {
   playerNumber: number; 
   heroes: PrioritizedHero[];
 }
-
 
 interface UsePartyGeneratorProps {
     pool: Hero[];
@@ -36,17 +34,20 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
   const [prioritySpinData, setPrioritySpinData] = useState<{ hero: Hero, priority: Priority, key: string } | null>(null);
 
   const timeoutRef = useRef<number | null>(null);
-
-
-  useEffect(() => {
-    clearState();
-  }, [isPriorityMode]);
+  
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     return () => {
+      isMounted.current = false;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (isMounted.current) clearState();
+  }, [isPriorityMode]);
   
   const clearState = () => {
     setIsGenerating(false);
@@ -60,6 +61,8 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
   };
 
   const startNextReveal = (results: PlayerResult[], prevKey: string | null = null) => {
+    if (!isMounted.current) return; 
+
     let nextPlayerIndex = 0;
     let nextHeroIndex = 0;
 
@@ -97,21 +100,25 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
   };
 
   const handlePriorityAnimationEnd = () => {
-    if (!prioritySpinData) return;
+    if (!prioritySpinData || !isMounted.current) return;
     const revealedKey = prioritySpinData.key;
     setPrioritySpinData(null); 
     setRevealedSlots(prev => new Set(prev).add(revealedKey)); 
 
     timeoutRef.current = window.setTimeout(() => {
-        startNextReveal(finalResults, revealedKey);
+        if (isMounted.current) {
+             startNextReveal(finalResults, revealedKey);
+        }
     }, 500);
   };
 
   const handleSpinEnd = () => {
-    if (!currentSpinData) return;
+    if (!currentSpinData || !isMounted.current) return;
     const revealedKey = currentSpinData.key;
     
     timeoutRef.current = window.setTimeout(() => {
+        if (!isMounted.current) return;
+
         setIsHeroSpinModalVisible(false);
         setCurrentSpinData(null);
 
@@ -127,7 +134,9 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
             } else {
                 setRevealedSlots(prev => new Set(prev).add(revealedKey));
                 timeoutRef.current = window.setTimeout(() => {
-                    startNextReveal(finalResults, revealedKey);
+                    if (isMounted.current) {
+                        startNextReveal(finalResults, revealedKey);
+                    }
                 }, 1500);
             }
         }
@@ -135,6 +144,7 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
   };
 
   const generatePriorityTeams = (): PlayerResult[] => {
+     
       const totalHeroesNeeded = numPlayers * heroesPerPlayer;
       const newResults: PlayerResult[] = [];
       const canUseUnique = pool.length >= totalHeroesNeeded;
@@ -156,9 +166,7 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
           const playerHeroes: Hero[] = [];
           const usedInPlayer = new Set<number>();
           while(playerHeroes.length < heroesPerPlayer) {
-            // Check if it's even possible to get more unique heroes
             if (usedInPlayer.size >= pool.length) break;
-            
             const candidate = pool[Math.floor(Math.random() * pool.length)];
             if (!usedInPlayer.has(candidate.id)) {
               playerHeroes.push(candidate);
@@ -172,6 +180,7 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
   };
   
   const generateStandardTeams = (): PlayerResult[] => {
+     
       const totalHeroesNeeded = numPlayers * heroesPerPlayer;
       const newResults: PlayerResult[] = [];
       const canUseUnique = pool.length >= totalHeroesNeeded;
@@ -189,7 +198,6 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
           const usedInPlayer = new Set<number>();
            while(assignedHeroes.length < heroesPerPlayer) {
               if (usedInPlayer.size >= pool.length) break;
-
               const candidate = pool[Math.floor(Math.random() * pool.length)];
               if (!usedInPlayer.has(candidate.id)) {
                 assignedHeroes.push(candidate);
@@ -203,7 +211,9 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
   };
 
   const generateTeams = () => {
+    if (!isMounted.current) return;
     clearState();
+    
     if (pool.length < heroesPerPlayer && !isPriorityMode) {
         setError(`Not enough heroes in the pool to give ${heroesPerPlayer} unique heroes to each player.`);
         return;
@@ -219,7 +229,9 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
     if (isAnimationEnabled) {
         setIsGenerating(true);
         timeoutRef.current = window.setTimeout(() => {
-            startNextReveal(results);
+            if (isMounted.current) {
+                startNextReveal(results);
+            }
         }, 1500);
     } else {
         const allSlots = new Set<string>();
@@ -232,6 +244,8 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
     }
   };
 
+
+  
   const handleSkipToEnd = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     
@@ -314,4 +328,3 @@ export function usePartyGenerator({ pool, numPlayers, heroesPerPlayer, isPriorit
     }
   };
 }
-

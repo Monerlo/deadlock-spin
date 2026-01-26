@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useRef } from 'react';
 import type { Hero } from '../types'; 
+import { useSpinAnimation } from '../hooks/useSpinAnimation';
 
 interface SpinningReelProps {
   reelItems: Hero[];
@@ -7,73 +8,66 @@ interface SpinningReelProps {
   onSpinEnd: () => void;
 }
 
-
-const WINNER_POSITION = 90; 
-const CARD_WIDTH = 96;
-const GAP_WIDTH = 8;
-
 export function SpinningReel({ reelItems, winner, onSpinEnd }: SpinningReelProps) {
-  const [style, setStyle] = useState<React.CSSProperties>({ transform: 'translateX(0px)' });
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (winner && containerRef.current) {
-      
-      setStyle({
-        transition: 'none',
-        transform: 'translateX(0px)',
-      });
-
-      const timer = setTimeout(() => {
-        if (containerRef.current) {
-          const containerWidth = containerRef.current.offsetWidth;
-          const totalCardSpace = CARD_WIDTH + GAP_WIDTH;
-          const winnerOffset = WINNER_POSITION * totalCardSpace;
-          const finalPositionPx = (containerWidth / 2) - (CARD_WIDTH / 2) - winnerOffset;
-
-          setStyle({
-            transform: `translateX(${finalPositionPx}px)`,
-            transition: 'transform 5s cubic-bezier(0.2, 0.8, 0.2, 1)',
-          });
-        }
-      }, 50);
-
-      return () => clearTimeout(timer);
-    } else {
-      setStyle({
-        transition: 'none',
-        transform: 'translateX(0px)',
-      });
-    }
-  }, [winner, reelItems]);
+  
+  
+  const { style, isFinished, handleTransitionEnd, WINNER_POSITION } = useSpinAnimation(
+    containerRef, 
+    winner, 
+    onSpinEnd
+  );
 
   return (
-    <div ref={containerRef} className="relative w-full h-24 bg-[#121212] border-y border-[#2D2D2D] overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-full bg-[#C09B54] z-20"></div>
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-full bg-[#C09B54]/20 z-10"></div>
+    <div 
+      ref={containerRef} 
+      className="relative w-full h-40 bg-[#1a110e] border-y border-[#3d2b24] overflow-hidden"
+    >
       
+      <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-1 h-full bg-[#C09B54] z-20 shadow-[0_0_8px_rgba(192,155,84,0.6)] transition-opacity duration-500 ${isFinished ? 'opacity-0' : 'opacity-100'}`}></div>
+      
+   
+      <div className="absolute inset-y-0 left-0 w-16 z-10 pointer-events-none bg-gradient-to-r from-[#1a110e] to-transparent"></div>
+      <div className="absolute inset-y-0 right-0 w-16 z-10 pointer-events-none bg-gradient-to-l from-[#1a110e] to-transparent"></div>
+
       <div
         className="h-full flex items-center absolute top-0 left-0 gap-2"
-        style={style}
-        onTransitionEnd={winner ? onSpinEnd : undefined}
+        style={{
+          ...style,
+          willChange: 'transform', 
+        }}
+        onTransitionEnd={handleTransitionEnd}
       >
-        {reelItems.map((hero, index) => (
-          <div
-            key={hero ? `${hero.id}-${index}` : index}
-            className="flex-shrink-0 w-24 h-24 p-2"
-            style={{ boxSizing: 'border-box' }}
-          >
-            {hero && (
-              <img
-                src={hero.images.icon_hero_card}
-                alt={hero.name}
-                className="w-full h-full object-contain opacity-60"
-              />
-            )}
-          </div>
-        ))}
+        {reelItems.map((hero, index) => {
+          if (!hero) return null;
+
+          const isWinnerCard = index === WINNER_POSITION;
+          const showWinnerEffect = isFinished && isWinnerCard;
+
+          return (
+            <div
+              key={`${hero.id}-${index}`} 
+              className={`flex-shrink-0 w-24 aspect-[3/4] p-1 transition-all duration-500 ${
+                showWinnerEffect 
+                  ? 'scale-110 z-30 brightness-110' 
+                  : 'scale-100 z-0 opacity-100'
+              }`}
+            >
+              <div className={`w-full h-full relative rounded-lg border ${
+                  showWinnerEffect ? 'border-[#C09B54] shadow-lg' : 'border-white/5'
+                }`}>
+                  <img
+                    src={hero.images.icon_hero_card || undefined}
+                    alt={hero.name}
+                    className={`w-full h-full object-cover rounded-lg ${
+                      isFinished && !isWinnerCard ? 'opacity-40 grayscale-[0.5]' : 'opacity-100'
+                    }`}
+                  />
+                </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
-

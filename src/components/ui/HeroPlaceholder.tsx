@@ -1,3 +1,3 @@
-export const HeroPlaceholder = () => (
-    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#1A1A1A] border-2 border-[#2D2D2D]"></div>
+export const HeroPlaceholder = () => ( 
+    <div className="w-full aspect-[3/4] bg-[#2a1b15]/40 backdrop-blur-sm rounded-xl border border-white/5"></div>
 );

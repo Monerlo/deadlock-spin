@@ -3,14 +3,12 @@ import type { Hero, Priority } from '../../../types';
 import { AnimationControls } from '../../../components/ui/AnimationControls';
 
 
-
-const priorityToBorderClass = (priority: Priority | null): string => {
-    if (!priority) return 'border-transparent';
+const getFinalBorderClass = (priority: Priority): string => {
     switch (priority) {
-        case 3: return 'border-[#8A2BE2]'; 
-        case 2: return 'border-yellow-400';   
-        case 1: return 'border-[#808080]'; 
-        default: return 'border-transparent';
+        case 3: return 'border-[#8A2BE2] shadow-[0_0_30px_rgba(138,43,226,0.3)]';
+        case 2: return 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.3)]'; 
+        case 1: return 'border-[#808080] shadow-[0_0_30px_rgba(128,128,128,0.3)]';
+        default: return 'border-[#3d2b24]';
     }
 }
 
@@ -24,50 +22,61 @@ interface PrioritySpinModalProps {
 }
 
 export const PrioritySpinModal = ({ hero, finalPriority, onAnimationEnd, onSkipCurrent, onSkipAll, onCancel }: PrioritySpinModalProps) => {
-    const [currentBorderClass, setCurrentBorderClass] = useState('border-transparent');
-    const animationInterval = useRef<number | null>(null);
-    const animationTimeout = useRef<number | null>(null);
+    const [isFinished, setIsFinished] = useState(false);
+    const timeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
-        const priorities: Priority[] = [1, 2, 3];
-        let speed = 75;
-        let cycles = 0;
-
-        const animate = () => {
-            cycles++;
-            const randomIndex = Math.floor(Math.random() * priorities.length);
-            setCurrentBorderClass(priorityToBorderClass(priorities[randomIndex]));
-
-            if (cycles > 15 && speed < 150) speed = 150;
-            if (cycles > 22 && speed < 300) speed = 300;
-            if (cycles > 26 && speed < 500) speed = 500;
+        
+        timeoutRef.current = window.setTimeout(() => {
+            setIsFinished(true);
             
-            animationInterval.current = window.setTimeout(animate, speed);
-        };
-
-        animate();
-
-        animationTimeout.current = window.setTimeout(() => {
-            if (animationInterval.current) clearTimeout(animationInterval.current);
-            setCurrentBorderClass(priorityToBorderClass(finalPriority));
             setTimeout(onAnimationEnd, 1000); 
-        }, 4000); 
+        }, 3000); 
 
         return () => {
-            if (animationInterval.current) clearTimeout(animationInterval.current);
-            if (animationTimeout.current) clearTimeout(animationTimeout.current);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
-    }, [finalPriority, onAnimationEnd]);
+    }, [onAnimationEnd]);
     
+    
+    const borderClass = isFinished 
+        ? getFinalBorderClass(finalPriority) 
+        : 'border-4 animate-priority-spin'; 
+
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
-            <div className={`bg-[#1A1A1A] border-4 ${currentBorderClass} shadow-2xl p-6 flex flex-col items-center gap-4`}>
-                 <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">{hero.name}</h2>
-                 <img src={hero.images.icon_hero_card} alt={hero.name} className="w-32 h-32 sm:w-48 sm:h-48 object-cover" />
-                 <p className="text-[#A0A0A0] text-base sm:text-lg">Assigning Priority...</p>
-                 <AnimationControls onSkipCurrent={onSkipCurrent} onSkipAll={onSkipAll} onCancel={onCancel} />
+        
+        <div className="fixed inset-0 bg-[#000000]/95 z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+            
+            <div className={`relative bg-[#1a110e] border-4 ${borderClass} rounded-xl p-8 flex flex-col items-center gap-6 max-w-md w-full transition-all duration-300`}>
+                 
+                 
+                 <h2 className="text-3xl sm:text-4xl font-bold text-[#E19D37] text-center uppercase tracking-widest drop-shadow-md z-10">
+                    {hero.name}
+                 </h2>
+
+                
+                 <div className="relative group">
+                    
+                    <div className="absolute -inset-1 bg-[#E19D37]/10 rounded-lg"></div>
+                    <img 
+                        src={hero.images.icon_hero_card || ''} 
+                        alt={hero.name} 
+                        className="relative w-40 h-40 sm:w-56 sm:h-56 object-cover rounded-lg border-2 border-[#3d2b24] shadow-xl z-10" 
+                    />
+                 </div>
+
+                
+                 <div className="text-center z-10">
+                     <p className="text-[#A0A0A0] text-sm uppercase tracking-wider font-bold mb-1">Priority Level</p>
+                     <p className={`text-2xl font-black ${isFinished ? 'text-white scale-110' : 'text-[#6e6050]'} transition-all duration-300`}>
+                        {isFinished ? `TIER ${finalPriority}` : 'CALCULATING...'}
+                     </p>
+                 </div>
+
+                 <div className="z-10 w-full flex justify-center mt-2">
+                    <AnimationControls onSkipCurrent={onSkipCurrent} onSkipAll={onSkipAll} onCancel={onCancel} />
+                 </div>
             </div>
         </div>
     );
 };
-
