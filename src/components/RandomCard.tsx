@@ -12,7 +12,7 @@ export const RandomCard: React.FC<RandomCardProps> = ({ data, onReveal }) => {
   const tier = item.item_tier || 1;
   const triangleColor = CATEGORY_COLORS[category];
 
- 
+  
   const iconUrl = item.shop_image_webp || item.image_webp;
 
   return (
@@ -23,7 +23,7 @@ export const RandomCard: React.FC<RandomCardProps> = ({ data, onReveal }) => {
       
       
       <div className="absolute inset-0 w-full h-full">
-        {/* 1. ФОН */}
+        
         <img 
           src={getItemBackground(category, tier)} 
           alt="Background" 
@@ -91,8 +91,8 @@ export const RandomCard: React.FC<RandomCardProps> = ({ data, onReveal }) => {
             className="absolute inset-0 w-full h-full object-cover grayscale brightness-125 contrast-75 opacity-60 mix-blend-multiply"
         />
 
-        
-        <span className="relative z-10 text-4xl font-extrabold text-[#020101]/90 drop-shadow-sm">?</span>
+       
+        <span className="relative z-10 text-4xl font-extrabold text-[#020101]/90 drop-shadow-sm animate-pulse">?</span>
       </div>
 
     </div>

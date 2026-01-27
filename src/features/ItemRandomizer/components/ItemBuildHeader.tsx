@@ -21,13 +21,16 @@ export const ItemBuildHeader: React.FC<ItemBuildHeaderProps> = ({
           Current <span className="text-[#E19D37]">Build</span>
         </h2>
         <div className="flex items-center gap-2 mt-1.5">
-          <span className={`text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border transition-colors duration-500
+          
+          <span className={`text-[10px] font-bold font-mono uppercase px-2 py-0.5 rounded border transition-colors duration-300
              ${!allRevealed 
-                ? 'border-[#3d2b24] text-[#808080] bg-[#1A1A1A] animate-pulse' 
-                : 'border-[#E19D37] text-[#E19D37] bg-[#E19D37]/10'
+                
+                ? 'border-[#E19D37] text-[#121212] bg-[#E19D37] shadow-[0_0_10px_rgba(225,157,55,0.3)]' 
+                
+                : 'border-[#3d2b24] text-[#808080] bg-[#1A1A1A]'
              }
           `}>
-             {!allRevealed ? "ANALYZING DATA..." : "BALANCED BUILD"}
+             {!allRevealed ? "READY • TAP CARDS TO REVEAL" : "FULL BUILD REVEALED"}
           </span>
         </div>
       </div>
@@ -45,15 +48,19 @@ export const ItemBuildHeader: React.FC<ItemBuildHeaderProps> = ({
 
         <div className="flex gap-2">
            {!allRevealed && (
-              <button onClick={onRevealAll} className="h-8 px-4 bg-[#1A1A1A] border border-[#3d2b24] hover:border-[#E19D37] hover:text-[#E19D37] text-[#A0A0A0] text-[10px] font-bold uppercase tracking-wider rounded transition-all">
-                Reveal
+              <button 
+                onClick={onRevealAll} 
+                
+                className="h-8 px-4 bg-[#1A1A1A] border border-[#E19D37]/50 text-[#E19D37] hover:bg-[#E19D37] hover:text-black text-[10px] font-bold uppercase tracking-wider rounded transition-all shadow-lg"
+              >
+                Reveal All
               </button>
            )}
            <button 
               onClick={onGenerate}
-              className="h-8 px-5 text-[10px] font-bold uppercase tracking-widest rounded transition-all shadow-lg flex items-center bg-[#E19D37] text-black border border-[#E19D37] hover:bg-[#c98a2d]"
+              className="h-8 px-5 text-[10px] font-bold uppercase tracking-widest rounded transition-all shadow-lg flex items-center bg-[#E19D37] text-black border border-[#E19D37] hover:bg-[#c98a2d] hover:shadow-[0_0_15px_rgba(225,157,55,0.4)]"
             >
-              Generate
+              Generate New
            </button>
         </div>
       </div>
