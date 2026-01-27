@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { fetchItems } from '../services/deadlockApi';
 import { classifyItem, getPriceByTier, type ClassifiedItem } from '../services/itemUtils';
 import type { Item } from '../types';
@@ -27,6 +27,13 @@ export const useItemBuild = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   
+  const randomBuildRef = useRef<RandomBuildState | null>(null);
+
+  useEffect(() => {
+      randomBuildRef.current = randomBuild;
+  }, [randomBuild]);
+
+  
   useEffect(() => {
     const loadItems = async () => {
       try {
@@ -45,11 +52,14 @@ export const useItemBuild = () => {
     loadItems();
   }, []);
 
-  
+ 
   const totalSouls = useMemo(() => {
     if (!randomBuild) return 0;
+    
     const sections = [...randomBuild.lane, ...randomBuild.mid, ...randomBuild.late, ...randomBuild.active];
-    return sections.reduce((sum, item) => sum + getPriceByTier(item.item.item_tier), 0);
+    
+    const revealedItems = sections.filter(i => i.isRevealed);
+    return revealedItems.reduce((sum, item) => sum + getPriceByTier(item.item.item_tier), 0);
   }, [randomBuild]);
 
   const allRevealed = useMemo(() => {
@@ -58,7 +68,7 @@ export const useItemBuild = () => {
     return sections.every(item => item.isRevealed);
   }, [randomBuild]);
 
-  
+  // Генерація білда (без змін)
   const generateRandomBuild = useCallback((items: Item[] = allItems, map: Record<string, Item> = itemMap) => {
     if (items.length === 0) return;
 
@@ -78,21 +88,18 @@ export const useItemBuild = () => {
       return shuffleArray(available).slice(0, count);
     };
 
-    
     const activePool = items.filter(i => i.activation && i.activation !== 'passive');
     const passivePool = items.filter(i => !i.activation || i.activation === 'passive');
     const tier4Pool = passivePool.filter(i => (i.item_tier || 1) >= 4);
     const tier3Pool = passivePool.filter(i => (i.item_tier || 1) === 3);
     const tier12Pool = passivePool.filter(i => (i.item_tier || 1) <= 2);
 
-    
     const activeCount = Math.floor(Math.random() * 4) + 1;
     const remainingSlots = 12 - activeCount;
     const lateCount = Math.floor(remainingSlots / 3);
     const midCount = Math.round(remainingSlots / 3);
     const laneCount = remainingSlots - lateCount - midCount;
 
-    
     const activeItems = pickRaw(activePool, activeCount);
     activeItems.forEach(blockItemAndComponents);
 
@@ -107,7 +114,6 @@ export const useItemBuild = () => {
     const midItemsRaw = pickRaw(tier3Pool, midCount);
     midItemsRaw.forEach(blockItemAndComponents);
 
-    
     const triggerRush = Math.random() < 0.15;
     let laneItemsRaw: Item[] = [];
     const MAX_LANE_COST = 10000;
@@ -124,7 +130,6 @@ export const useItemBuild = () => {
            let availableFillers = shuffleArray(tier12Pool.filter(i => !blockedItemIds.has(i.id)));
            let currentFillers = availableFillers.slice(0, neededFillers);
            
-          
            const getCost = (l: Item[]) => l.reduce((s, i) => s + getPriceByTier(i.item_tier), 0);
            let currentTotal = getCost([rushItem, ...currentFillers]);
            let unusedFillers = availableFillers.slice(neededFillers);
@@ -132,11 +137,9 @@ export const useItemBuild = () => {
            while (currentTotal > MAX_LANE_COST) {
                const expIdx = currentFillers.findIndex(i => getPriceByTier(i.item_tier) > 500);
                const cheapIdx = unusedFillers.findIndex(i => getPriceByTier(i.item_tier) <= 500);
-               
                if (expIdx === -1 || cheapIdx === -1) break;
-               
                currentFillers[expIdx] = unusedFillers[cheapIdx];
-               unusedFillers.splice(cheapIdx, 1); // remove used
+               unusedFillers.splice(cheapIdx, 1); 
                currentTotal = getCost([rushItem, ...currentFillers]);
            }
            currentFillers.forEach(blockItemAndComponents);
@@ -161,8 +164,8 @@ export const useItemBuild = () => {
     });
   }, [allItems, itemMap]);
 
-  // Actions
-  const handleReveal = (itemToReveal: ClassifiedItem) => {
+  
+  const handleReveal = useCallback((itemToReveal: ClassifiedItem) => {
     setRandomBuild(prev => {
       if (!prev) return null;
       const updateList = (list: ClassifiedItem[]) => 
@@ -174,15 +177,40 @@ export const useItemBuild = () => {
         active: updateList(prev.active)
       };
     });
-  };
+  }, []);
 
-  const revealAll = () => {
-    setRandomBuild(prev => {
-      if (!prev) return null;
-      const open = (list: ClassifiedItem[]) => list.map(i => ({...i, isRevealed: true}));
-      return { lane: open(prev.lane), mid: open(prev.mid), late: open(prev.late), active: open(prev.active) };
+  
+  const revealAll = useCallback(() => {
+    const currentBuild = randomBuildRef.current;
+    if (!currentBuild) return;
+
+    
+    const getSortedPhase = (baseItems: ClassifiedItem[], activeItems: ClassifiedItem[], phaseFilter: string) => {
+       const relevantActives = activeItems.filter(i => i.phase === phaseFilter);
+       return [...baseItems, ...relevantActives].sort((a, b) => (a.item.cost || 0) - (b.item.cost || 0));
+    };
+
+    
+    const allItemsInOrder = [
+      ...getSortedPhase(currentBuild.lane, currentBuild.active, 'lane'),
+      ...getSortedPhase(currentBuild.mid, currentBuild.active, 'mid'),
+      ...getSortedPhase(currentBuild.late, currentBuild.active, 'late'),
+    ];
+
+    
+    const DELAY_MS = 150; 
+    let delayIndex = 0;
+
+    allItemsInOrder.forEach((item) => {
+      if (!item.isRevealed) {
+        setTimeout(() => {
+           
+           handleReveal(item);
+        }, delayIndex * DELAY_MS);
+        delayIndex++;
+      }
     });
-  };
+  }, [handleReveal]); 
 
   return {
     randomBuild,
