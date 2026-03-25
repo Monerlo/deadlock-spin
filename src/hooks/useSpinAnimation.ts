@@ -86,7 +86,7 @@ export function useSpinAnimation(
     };
   }, [winner, calculatePosition]); 
 
-  // Обробник CSS події
+  
   const handleTransitionEnd = (e: React.TransitionEvent) => {
     if (e.propertyName === 'transform' && isSpinning.current) {
         

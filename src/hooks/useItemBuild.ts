@@ -68,7 +68,7 @@ export const useItemBuild = () => {
     return sections.every(item => item.isRevealed);
   }, [randomBuild]);
 
-  // Генерація білда (без змін)
+ 
   const generateRandomBuild = useCallback((items: Item[] = allItems, map: Record<string, Item> = itemMap) => {
     if (items.length === 0) return;
 

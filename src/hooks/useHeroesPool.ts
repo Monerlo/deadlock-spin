@@ -1,40 +1,28 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { fetchHeroes } from '../services/deadlockApi';
+import { useState, useCallback, useMemo } from 'react';
+import { useHeroesContext } from '../context/HeroesContext';
 import type { Hero } from '../types';
 
 export function useHeroesPool() {
-  const [allHeroes, setAllHeroes] = useState<Hero[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { allHeroes, loading } = useHeroesContext();
   const [roulettePool, setRoulettePool] = useState<Set<Hero>>(new Set());
 
-  
-  useEffect(() => {
-    const getHeroes = async () => {
-      setLoading(true);
-      const fetchedHeroes = await fetchHeroes();
-      const activeHeroes = fetchedHeroes.filter(hero =>
-        hero.player_selectable === true && hero.disabled === false
-      );
-      setAllHeroes(activeHeroes);
-      setRoulettePool(new Set(activeHeroes));
-      setLoading(false);
-    };
-    getHeroes();
-  }, []);
+  useMemo(() => {
+    if (allHeroes.length > 0 && roulettePool.size === 0) {
+      setRoulettePool(new Set(allHeroes));
+    }
+  }, [allHeroes]);
 
-  
   const poolArray = useMemo(() => Array.from(roulettePool), [roulettePool]);
 
-  
   const toggleHero = useCallback((hero: Hero) => {
-    setRoulettePool((prevPool) => {
-      const newPool = new Set(prevPool);
-      if (newPool.has(hero)) {
-        newPool.delete(hero);
+    setRoulettePool((prev) => {
+      const next = new Set(prev);
+      if (next.has(hero)) {
+        next.delete(hero);
       } else {
-        newPool.add(hero);
+        next.add(hero);
       }
-      return newPool;
+      return next;
     });
   }, []);
 
@@ -46,13 +34,5 @@ export function useHeroesPool() {
     setRoulettePool(new Set());
   }, []);
 
-  return {
-    allHeroes,
-    poolArray,
-    roulettePool, 
-    loading,
-    toggleHero,
-    resetPool,
-    clearPool
-  };
+  return { allHeroes, poolArray, roulettePool, loading, toggleHero, resetPool, clearPool };
 }
