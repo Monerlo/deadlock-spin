@@ -1,7 +1,7 @@
 import type { Hero, Item } from '../types';
 
-const API_BASE_URL = "https://assets.deadlock-api.com";
-const ASSETS_BASE_URL = "https://assets.deadlock-api.com/images/heroes";
+const API_BASE_URL = "https://api.deadlock-api.com/v1/assets";
+const ASSETS_BASE_URL = "https://api.deadlock-api.com/v1/assets/images/heroes";
 
 export const SOULS_ICON_URL = "/Souls.webp";
 

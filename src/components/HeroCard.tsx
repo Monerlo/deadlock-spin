@@ -36,7 +36,7 @@ const HeroCardComponent = ({ hero, isSelected, onClick, priority = null, classNa
   ? 'opacity-100 z-10' 
   : 'opacity-50 hover:opacity-100 hover:scale-105 hover:z-10 transform'; 
 
-  const imageUrl = hero.images.icon_hero_card || 'https://assets.deadlock-api.com/images/heroes/heroes_default_vertical.png';
+  const imageUrl = hero.images.icon_hero_card || 'https://api.deadlock-api.com/v1/assets/images/heroes/heroes_default_vertical.png';
 
   return (
     <div
@@ -50,7 +50,7 @@ const HeroCardComponent = ({ hero, isSelected, onClick, priority = null, classNa
         loading="lazy"
         className="w-full h-full object-cover rounded-lg" 
         onError={(e) => {
-           e.currentTarget.src = 'https://assets.deadlock-api.com/images/heroes/heroes_default_vertical.png';
+           e.currentTarget.src = 'https://api.deadlock-api.com/v1/assets/images/heroes/heroes_default_vertical.png';
            e.currentTarget.onerror = null;
         }}
       />
