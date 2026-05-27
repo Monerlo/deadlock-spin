@@ -24,7 +24,7 @@ const resolveImageUrl = (imageKey: string | null | undefined): string => {
 
 export async function fetchHeroes(): Promise<Hero[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/v2/heroes`);
+    const response = await fetch(`${API_BASE_URL}/heroes`);
     if (!response.ok) throw new Error('Network response was not ok');
     
     const rawData: Hero[] = await response.json();
@@ -60,7 +60,7 @@ export async function fetchHeroes(): Promise<Hero[]> {
 
 export async function fetchItems(): Promise<Item[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/v2/items`);
+    const response = await fetch(`${API_BASE_URL}/items`);
     if (!response.ok) throw new Error('Network response was not ok');
     
     const data: Item[] = await response.json();
