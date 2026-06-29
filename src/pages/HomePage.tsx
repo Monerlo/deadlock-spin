@@ -19,17 +19,15 @@ export const HomePage = () => {
       <div className="absolute inset-0 flex flex-col overflow-hidden">
 
         {/* ── Банер Pro Builds ── */}
-        <div className="h-44 sm:h-52 flex-shrink-0">
+        <div className="h-36 sm:h-44 md:h-52 flex-shrink-0">
           <BuildsTeaser />
         </div>
 
         {/* ── Items + Heroes панелі ── */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         
-        <div className="relative group flex-1 h-[50%] md:h-auto md:w-1/2 overflow-hidden">
+        <div className="relative group flex-1 min-h-0 md:w-1/2 overflow-hidden">
           <Link to="/items" className="absolute inset-0 w-full h-full block">
-              
-              
               <div className="absolute inset-0 bg-item bg-cover bg-center transition-all duration-1000 ease-out group-hover:scale-105 group-hover:brightness-[0.4] brightness-75 md:brightness-100" />
 
               
@@ -75,7 +73,7 @@ export const HomePage = () => {
         </div>
 
         
-        <div className="relative group flex-1 h-[50%] md:h-auto md:w-1/2 overflow-hidden">
+        <div className="relative group flex-1 min-h-0 md:w-1/2 overflow-hidden">
           <Link to="/heroes" className="absolute inset-0 w-full h-full block">
               
               
