@@ -97,6 +97,16 @@ export function matchUrl(match: DemGgMatch): string {
   return `https://dem.gg/matches/${match.id}${slug ? `/${slug}` : ''}`;
 }
 
+let _dlItemsCache: Map<number, { id: number; shop_image_webp?: string; image_webp?: string }> | null = null;
+
+export async function getDlItemsMap(): Promise<Map<number, { id: number; shop_image_webp?: string; image_webp?: string }>> {
+  if (_dlItemsCache) return _dlItemsCache;
+  const res = await fetch('https://api.deadlock-api.com/v1/assets/items');
+  const data = await res.json();
+  _dlItemsCache = new Map(data.map((i: { id: number }) => [i.id, i]));
+  return _dlItemsCache;
+}
+
 export async function fetchRandomBuild(heroName?: string): Promise<RandomBuild | null> {
   // Рандомний offset щоб показувати білди з різних частин архіву, не тільки свіжі
   const randomOffset = Math.floor(Math.random() * 400);
