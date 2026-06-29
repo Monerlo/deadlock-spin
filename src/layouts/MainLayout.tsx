@@ -8,7 +8,8 @@ export const MainLayout = () => {
 
   const navLinks = [
     { path: '/heroes', label: 'HEROES' },
-    { path: '/items', label: 'ITEMS' }
+    { path: '/items', label: 'ITEMS' },
+    { path: '/builds', label: 'BUILDS' },
   ];
 
   const isActive = (path: string) => {

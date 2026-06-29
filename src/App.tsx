@@ -3,6 +3,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { HomePage } from './pages/HomePage';
 import { HeroesPage } from './pages/HeroesPage';
 import { ItemsPage } from './pages/ItemsPage';
+import { BuildsPage } from './pages/BuildsPage';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="heroes" element={<HeroesPage />} />
         <Route path="items" element={<ItemsPage />} />
+        <Route path="builds" element={<BuildsPage />} />
       </Route>
     </Routes>
   );
