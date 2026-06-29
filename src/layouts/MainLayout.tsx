@@ -110,8 +110,8 @@ export const MainLayout = () => {
       </nav>
 
       
-      <div className="flex-grow w-full relative z-10 flex flex-col">
-        <div className="flex-1 relative w-full"> 
+      <div className="flex-grow w-full relative z-10 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 relative w-full min-h-0 overflow-hidden"> 
             <Outlet />
         </div>
       </div>
